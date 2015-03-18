@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_start_screen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/blue_lighter"
+    android:orientation="vertical"
+    >
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="33sp"
+        android:layout_marginTop="2sp"
+        android:background="@drawable/icon_musical_note" />
+    
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="182sp"
+        android:background="@drawable/icon_thriller" />
+    
+    <ImageView
+        android:layout_marginLeft="320sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_comedy2" />
+      
+
+    <Button
+        android:id="@+id/button_instructions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:text="How To Play"
+        android:textColor="@color/purple_deep"
+        android:textSize="50sp" />
+
+    <ImageView
+        android:layout_marginLeft="5sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_crime" />
+    
+    <ImageView
+        android:layout_marginLeft="250sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_action" />
+    
+    <Button
+        android:id="@+id/button_play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+       android:layout_gravity="center"
+        android:text="PLAY"
+        android:textColor="@color/purple_deep"
+        android:textSize="50sp" />
+
+    <ImageView
+        android:layout_marginLeft="73sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_musical" />
+    
+    <ImageView
+        android:layout_marginLeft="279sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_comedy" />
+    
+    <ImageView
+        android:layout_marginLeft="19sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_detective" />
+    
+    <Button
+        android:id="@+id/button_settings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:text="Settings"
+        android:layout_gravity="center"
+        android:textColor="@color/purple_deep"
+        android:textSize="50sp" />
+
+    <ImageView
+        android:layout_marginLeft="300sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_romantic" />
+    
+    <ImageView
+        android:layout_marginLeft="8sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_scifi" />
+    
+    <ImageView
+        android:layout_marginLeft="173sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_drama" />
+    
+     <ImageView
+        android:layout_marginLeft="273sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_musical" />
+     
+      <ImageView
+        android:layout_marginLeft="33sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_sport" />
+      
+      <ImageView
+        android:layout_marginLeft="150sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_camera" />
+      
+      
+      <ImageView
+        android:layout_marginLeft="250sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_fantasy" />
+    
+</LinearLayout><!--
+        android:padding="12dp"
+        android:shadowColor="@color/solid_yellow"
+        android:shadowDx="0"
+        android:shadowDy="0"
+        android:textStyle="bold|italic"
+        android:shadowRadius="24"
+-->
