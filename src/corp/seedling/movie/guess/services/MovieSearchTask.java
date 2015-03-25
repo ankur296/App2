@@ -5,24 +5,38 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import corp.seedling.movie.guess.app.GameApp;
-import corp.seedling.movie.guess.bridges.ServerResponseListener;
-import corp.seedling.movie.guess.data.GenericSeeker;
-import corp.seedling.movie.guess.data.MovieContract.MovieEntry;
-import corp.seedling.movie.guess.data.MovieDbHelper;
-import corp.seedling.movie.guess.data.MovieSeeker;
-import android.content.Context;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
+import corp.seedling.movie.guess.app.GameApp;
+import corp.seedling.movie.guess.bridges.ServerResponseListener;
+import corp.seedling.movie.guess.data.MovieContract.MovieEntry;
+import corp.seedling.movie.guess.data.MovieDbHelper;
+import corp.seedling.movie.guess.ui.StartingScreen;
 
 public class MovieSearchTask extends AsyncTask<String, Void, ArrayList<ArrayList<String>>> {
 
-	private GenericSeeker<String> movieSeeker = new MovieSeeker();
 	private ServerResponseListener responseListener = null;
+	private int gameLevel = 3;
+	private static String voteCountCondition = " >= 400 ";
 
 	public MovieSearchTask(ServerResponseListener listener){
 		this.responseListener = listener;
+	}
+
+	public void setLevel(int level){
+		this.gameLevel = level;
+
+		if (gameLevel > StartingScreen.TOTAL_LEVELS){
+
+			gameLevel -= 9 ;
+			voteCountCondition = " < 100 ";
+		}
 	}
 
 	@Override
@@ -31,28 +45,47 @@ public class MovieSearchTask extends AsyncTask<String, Void, ArrayList<ArrayList
 		ArrayList<ArrayList<String>> completeMovieList = new ArrayList<ArrayList<String>>();
 		ArrayList<String> nonjumbledMoviesList = new ArrayList<String>();
 		ArrayList<String> jumbledMoviesList = new ArrayList<String>();
-		ArrayList<String> votecountList = new ArrayList<String>();
+		ArrayList<String> starcastList = new ArrayList<String>();
+		ArrayList<String> charList = new ArrayList<String>();
 
+		
+		JSONArray starcastJsonArray = new JSONArray();
 
 		MovieDbHelper dbHelper = new MovieDbHelper(GameApp.getAppInstance());
 		SQLiteDatabase database = dbHelper.getWritableDatabase(); 
-		String selectQuery = "SELECT  * FROM " + MovieEntry.TABLE_NAME;
+		String selectQuery = "SELECT  * FROM " + MovieEntry.TABLE_NAME + " WHERE " + MovieEntry.COLUMN_NAME_LENGTH + " = " + gameLevel
+				+ " AND " + MovieEntry.COLUMN_VOTE_COUNT + voteCountCondition ;
 		Cursor c = database.rawQuery(selectQuery, null);
 
-		//		System.out.println("ANKUR "+c.getCount()); 
+		System.out.println("Ankur cursor: " + DatabaseUtils.dumpCursorToString(c) );
 		if (c.moveToFirst()){ 
 
-			//			for(int i = 0 ; i < 500 ; i++){
 			do{
 				String movieName;
 				String[] movieWords = null;
 				String jumbledMovieName = "";
-				int votecount;
+				String starCastString, charString;
+//				JSONObject json;
+				
 				//fetch names from db and store in list1
 				movieName = c.getString(c.getColumnIndexOrThrow(MovieEntry.COLUMN_NAME_TITLE)) ;
-				votecount = c.getInt(c.getColumnIndexOrThrow(MovieEntry.COLUMN_VOTE_COUNT)) ;
-				//				if (movieName.length() < 11){
-				//					System.out.println("movie name fetched from DB " + movieName + " , vote = " +votecount + " , " + Integer.toString(votecount) );
+
+				starCastString = c.getString(c.getColumnIndexOrThrow(MovieEntry.COLUMN_STAR_CAST)) ;
+				charString = c.getString(c.getColumnIndexOrThrow(MovieEntry.COLUMN_NAME_CHARACTER)) ;
+//				try {
+//				
+//					json = new JSONObject(starCast);
+//					starcastJsonArray = json.optJSONArray("starcast");
+//					
+//					for(int i = 0 ; i < starcastJsonArray.length() ; i++)
+//						starcastList.add(starcastJsonArray.optString(i));
+//						
+//				} catch (JSONException e) {
+//					e.printStackTrace();
+//				}
+
+				starcastList.add(starCastString);
+				charList.add(charString);
 				nonjumbledMoviesList.add(movieName);
 
 				movieWords = movieName.split("\\s+");
@@ -67,23 +100,19 @@ public class MovieSearchTask extends AsyncTask<String, Void, ArrayList<ArrayList
 				}
 				//jumble the alphabets and store in list2
 				jumbledMoviesList.add(jumbledMovieName );
-				votecountList.add(Integer.toString(votecount) );
-				//				}
-				c.moveToNext();
+
 			}while(c.moveToNext());
-			//			}
 
 			long seed = System.nanoTime();
 			Collections.shuffle(nonjumbledMoviesList, new Random(seed));
 			Collections.shuffle(jumbledMoviesList, new Random(seed));
-			Collections.shuffle(votecountList, new Random(seed));
+			Collections.shuffle(starcastList, new Random(seed));
+			Collections.shuffle(charList, new Random(seed));
 
 			completeMovieList.add(0, nonjumbledMoviesList);
 			completeMovieList.add(1, jumbledMoviesList);
-			completeMovieList.add(2, votecountList);
-
-
-
+			completeMovieList.add(2, starcastList);
+			completeMovieList.add(3, charList);
 		}
 
 		return completeMovieList;
@@ -92,7 +121,8 @@ public class MovieSearchTask extends AsyncTask<String, Void, ArrayList<ArrayList
 	@Override
 	protected void onPostExecute(final ArrayList<ArrayList<String>> movieList) {
 
-		responseListener.onReceiveResult(movieList);
+		if (responseListener != null)
+			responseListener.onReceiveResult(movieList);
 
 		//		for(String name: movieList.get(0))
 		//			System.out.println("original Names = " + name);

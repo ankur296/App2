@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:background="#ff1f253d"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/layout_hint_moviename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:orientation="horizontal" >
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/layout_coin_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/layout_hint_moviename"
+        android:layout_margin="10dp"
+        android:gravity="center"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/tv_coin_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textAppearance="@android:style/TextAppearance.Large"
+            android:textColor="@color/yellow"
+            android:textSize="30.0sp" />
+    </RelativeLayout>
+
+    <TableLayout
+        android:id="@+id/layout_hints"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/layout_coin_status"
+        android:layout_margin="2.0dip"
+        android:gravity="center" >
+
+        <TableRow
+            android:id="@+id/show_letter"
+            android:layout_margin="2.0dip"
+            android:background="@drawable/background"
+            android:padding="2.0dip" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:background="@drawable/coins10"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btn_show_single"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:layout_marginLeft="2.0dip"
+                android:background="@*android:color/transparent"
+                android:gravity="center_vertical"
+                android:text="Show A Letter From Start"
+                android:textColor="@color/yellow"
+                android:textSize="15.0sp" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/remove_letter"
+            android:layout_margin="2.0dip"
+            android:background="@drawable/background"
+            android:padding="2.0dip" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:background="@drawable/coins30"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btn_show_all_correct"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:layout_marginLeft="2.0dip"
+                android:background="@*android:color/transparent"
+                android:gravity="center_vertical"
+                android:text="Show already correctly placed letters"
+                android:textColor="@color/yellow"
+                android:textSize="15.0sp" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/solve_puzz"
+            android:layout_margin="2.0dip"
+            android:background="@drawable/background"
+            android:padding="2.0dip" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:background="@drawable/coins60"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btn_show_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:layout_marginLeft="2.0dip"
+                android:background="@*android:color/transparent"
+                android:gravity="center_vertical"
+                android:text="Show All Letters"
+                android:textColor="@color/yellow"
+                android:textSize="15.0sp" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/show_actor_single"
+            android:layout_margin="2.0dip"
+            android:background="@drawable/background"
+            android:padding="2.0dip" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:background="@drawable/coins10"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btn_show_actor_single"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:layout_marginLeft="2.0dip"
+                android:background="@*android:color/transparent"
+                android:gravity="center_vertical"
+                android:text="Show An Actor From This Movie"
+                android:textColor="@color/yellow"
+                android:textSize="15.0sp" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/show_character_single"
+            android:layout_margin="2.0dip"
+            android:background="@drawable/background"
+            android:padding="2.0dip" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:background="@drawable/coins10"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btn_show_char_single"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:layout_marginLeft="2.0dip"
+                android:background="@*android:color/transparent"
+                android:gravity="center_vertical"
+                android:text="Show A Character From This Movie"
+                android:textColor="@color/yellow"
+                android:textSize="15.0sp" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/show_all_actors"
+            android:layout_margin="2.0dip"
+            android:background="@drawable/background"
+            android:padding="2.0dip" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:background="@drawable/coins30"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btn_show_all_actors"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:layout_marginLeft="2.0dip"
+                android:background="@*android:color/transparent"
+                android:gravity="center_vertical"
+                android:text="Show All Actors In This Movie"
+                android:textColor="@color/yellow"
+                android:textSize="15.0sp" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/show_all_chars"
+            android:layout_margin="2.0dip"
+            android:background="@drawable/background"
+            android:padding="2.0dip" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:background="@drawable/coins30"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btn_show_all_chars"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:layout_marginLeft="2.0dip"
+                android:background="@*android:color/transparent"
+                android:gravity="center_vertical"
+                android:text="Show All Characters In This Movie"
+                android:textColor="@color/yellow"
+                android:textSize="15.0sp" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/show_all_actors_chars"
+            android:layout_margin="2.0dip"
+            android:background="@drawable/background"
+            android:padding="2.0dip" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:background="@drawable/coins60"
+                android:gravity="center" />
+
+            <Button
+                android:id="@+id/btn_show_all_actors_chars"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2.0dip"
+                android:layout_marginLeft="2.0dip"
+                android:background="@*android:color/transparent"
+                android:gravity="center_vertical"
+                android:text="Show Complete Actor-Charcter Mapping"
+                android:textColor="@color/yellow"
+                android:textSize="15.0sp" />
+        </TableRow>
+    </TableLayout>
+
+    <RelativeLayout
+        android:id="@+id/layout_coins_free"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/layout_hints"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="5.0dip"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="20.0dip"
+        android:layout_marginTop="20.0dip"
+        android:background="@drawable/background"
+        android:padding="5.0dip" >
+
+        <TextView
+            android:id="@+id/coin_draw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="3.0dip"
+            android:background="@drawable/coinmoney"
+            android:paddingRight="4.0dip" />
+
+        <Button
+            android:id="@+id/btn_coins_free"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="2.0dip"
+            android:layout_toRightOf="@id/coin_draw"
+            android:background="@*android:color/transparent"
+            android:singleLine="true"
+            android:text="Get FREE Coins"
+            android:textColor="@color/yellow"
+            android:textSize="15.0sp" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/layout_coins_buy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/layout_hints"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="5.0dip"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="20.0dip"
+        android:layout_marginTop="20.0dip"
+        android:background="@drawable/background"
+        android:padding="5.0dip" >
+
+        <TextView
+            android:id="@+id/coin_draw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="3.0dip"
+            android:background="@drawable/coinmoney"
+            android:paddingRight="4.0dip" />
+
+        <Button
+            android:id="@+id/btn_coins_buy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="2.0dip"
+            android:layout_toRightOf="@id/coin_draw"
+            android:background="@*android:color/transparent"
+            android:singleLine="true"
+            android:text="Buy Coins"
+            android:textColor="@color/yellow"
+            android:textSize="15.0sp" />
+    </RelativeLayout>
+</RelativeLayout>

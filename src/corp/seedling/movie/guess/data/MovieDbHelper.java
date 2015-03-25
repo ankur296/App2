@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 public class MovieDbHelper extends SQLiteAssetHelper{
     // If you change the database schema, you must increment the database version.
-    public static final int DATABASE_VERSION = 2; 
+    public static final int DATABASE_VERSION = 3; 
     public static final String DATABASE_NAME = "GuessMovies.db";
     
     private static final String TEXT_TYPE = " TEXT";
@@ -19,8 +19,10 @@ public class MovieDbHelper extends SQLiteAssetHelper{
     		"CREATE TABLE " + MovieEntry.TABLE_NAME + " (" + 
         MovieEntry._ID + " INTEGER PRIMARY KEY," +
         MovieEntry.COLUMN_NAME_TITLE + TEXT_TYPE + COMMA_SEP +
-        MovieEntry.COLUMN_NAME_STAR_CAST + TEXT_TYPE + COMMA_SEP +
-        MovieEntry.COLUMN_VOTE_COUNT + TEXT_TYPE +
+        MovieEntry.COLUMN_NAME_LENGTH + TEXT_TYPE + COMMA_SEP +
+        MovieEntry.COLUMN_VOTE_COUNT + TEXT_TYPE + COMMA_SEP +
+        MovieEntry.COLUMN_STAR_CAST + TEXT_TYPE + COMMA_SEP +
+        MovieEntry.COLUMN_NAME_CHARACTER + TEXT_TYPE +
         " )";
 
     private static final String SQL_DELETE_ENTRIES =

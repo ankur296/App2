@@ -1,13 +1,12 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layout_outer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
-    android:background="@color/purple_deep"
-    android:orientation="vertical" 
     android:layout_marginTop="@dimen/activity_vertical_margin"
-    >
+    android:animateLayoutChanges="true"
+    android:background="#ff1f253d"
+    android:orientation="vertical" >
 
     <RelativeLayout
         android:id="@+id/layout_actionbar"
@@ -15,15 +14,14 @@
         android:layout_height="30sp"
         android:layout_alignParentTop="true"
         android:layout_centerVertical="true"
-        android:background="@color/pink" >
+        android:background="#ff1f253d" >
 
         <TextView
             android:id="@+id/tv_score_text"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:gravity="center_vertical"
             android:layout_alignParentLeft="true"
-            android:text="Score:"
+            android:gravity="center_vertical"
             android:textColor="@color/solid_yellow"
             android:textSize="17.0sp" />
 
@@ -40,16 +38,15 @@
         <TextView
             android:id="@+id/tv_level"
             android:layout_width="wrap_content"
-            android:layout_height="30.0dip"
+            android:layout_height="30dp"
             android:layout_centerInParent="true"
             android:layout_centerVertical="true"
             android:gravity="center"
-            android:paddingLeft="4.0dip"
-            android:paddingRight="4.0dip"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
             android:text="Level 1"
             android:textColor="@color/solid_yellow"
             android:textSize="20.0sp" />
-
 
         <TextView
             android:id="@+id/tv_coins"
@@ -63,22 +60,82 @@
 
         <ImageView
             android:id="@+id/iv_coins"
-            android:layout_toLeftOf="@id/tv_coins"
-            android:layout_marginRight="5sp"
             android:layout_width="wrap_content"
             android:layout_height="25sp"
             android:layout_centerVertical="true"
+            android:layout_marginRight="5sp"
+            android:layout_toLeftOf="@id/tv_coins"
             android:background="@drawable/coinmoney"
             android:gravity="center_vertical" />
     </RelativeLayout>
 
-    <LinearLayout
+   
+    
+    <RelativeLayout
+        android:id="@+id/layout_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/transparent" >
+
+        <Button
+            android:id="@+id/button_ask_friend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="#ff424f7f"
+            android:gravity="center"
+            android:padding="4.0dip"
+            android:text="@string/ask_friend"
+            android:textColor="@*android:color/white"
+            android:textSize="17.0sp" />
+
+        <Button
+            android:id="@+id/button_down"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/button_ask_friend"
+            android:background="@color/color_13"
+            android:gravity="center"
+            android:padding="4.0dip"
+            android:text="DOWN"
+            android:textColor="@*android:color/white"
+            android:textSize="17.0sp" />
+
+        <Button
+            android:id="@+id/button_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="#ff424f7f"
+            android:gravity="center"
+            android:padding="4.0dip"
+            android:text="@string/hint"
+            android:textColor="@*android:color/white"
+            android:textSize="17.0sp" />
+
+        <Button
+            android:id="@+id/button_pause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/button_hint"
+            android:background="@color/color_12"
+            android:gravity="center"
+            android:padding="4.0dip"
+            android:text="PAUSE"
+            android:textColor="@*android:color/white"
+            android:textSize="17.0sp" />
+    </RelativeLayout>
+
+     <LinearLayout
         android:id="@+id/layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:animateLayoutChanges="true"
         android:gravity="bottom"
+        android:layout_below="@id/layout_actionbar"
+        android:layout_above="@id/layout_hint"
         android:orientation="vertical" >
     </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>

@@ -2,15 +2,16 @@ package corp.seedling.movie.guess.ui;
 
 import java.util.ArrayList;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ClipData;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
-import android.os.Build;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.DisplayMetrics;
@@ -19,22 +20,27 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.DragShadowBuilder;
+import android.view.View.OnClickListener;
 import android.view.View.OnDragListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.Window;
 import android.view.animation.Animation;
-import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import corp.seedling.movie.guess.R;
 import corp.seedling.movie.guess.app.GameApp;
+import corp.seedling.movie.guess.bridges.ServerResponseListener;
+import corp.seedling.movie.guess.services.MovieSearchTask;
 import corp.seedling.movie.guess.utils.PauseHandler;
 import corp.seedling.movie.guess.utils.Sound;
 import corp.seedling.movie.guess.utils.TranslateAnim;
+import corp.seedling.movie.guess.utils.Utils;
 
 //TODO:space for showing level, space for ad
 //TMDB key : 196527b28198a82e77196ba38b0d32fb
@@ -47,11 +53,12 @@ import corp.seedling.movie.guess.utils.TranslateAnim;
 //2nd level: 1st char nt capital..big movie names..high speed..
 
 
-@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-public class GameScreen extends Activity implements AnimationListener{
+public class GameScreen extends Activity implements ServerResponseListener{
 
-	private LinearLayout layout, layoutOuter;
-	private ArrayList<String> movieList;
+	private LinearLayout layout;
+	private RelativeLayout layoutOuter;
+	private Button buttonHint, buttonAskFriend, buttonPause, buttonDown;
+	private ArrayList<String> movieList, starcastList, charList;
 	private ArrayList<ArrayList<String>> completeMovieList;
 	private int layoutHeight = 0;
 
@@ -60,18 +67,21 @@ public class GameScreen extends Activity implements AnimationListener{
 	LinearLayout.LayoutParams rowParams, cellParams; 
 	static int totalRowsAdded = 0;
 	static int currRows = 0; //TODO: Check if totalRowHeight can serve this or vice versa
+	static int maxRowsAllowed = 0;
 
 	private  Typeface mFontStyle;
-	private static int MAX_BLOCKS = 10;
-	private static int BLOCK_SIZE_SP = 30; 
-	private static int ACTIONBAR_SIZE_SP = 30;
-	private static int GENERIC_MARGIN_SP = 1;
+	private static int maxBoxesForThisLevel = 3;
+
+	private static int blockSize = 90;
+	public static final int ACTIONBAR_SIZE_SP = 30;
+	public static final int BOTTOM_LAYOUT_SIZE_SP = 30;
+	public static final int GENERIC_MARGIN_SP = 1;
 
 	private int colorBox;
 	private int colorText;
 	private int colorBoxSelected; 
 
-	private int startTime = 10000;
+	public static final int ANIM_DUR = 5000;
 	private static boolean GAME_OVER = false;
 
 	private static final int SOUND_SWIPE = 1;
@@ -79,46 +89,162 @@ public class GameScreen extends Activity implements AnimationListener{
 	private static final int SOUND_GAME_OVER  = 3;
 	private static final int SOUND_START_FALL  = 4;
 
-	private static int level = 0;
+	private static int level = 1;
 	private static int score = 0;
-	private static int coins = 0;
+	public static int coins = 0;
 
-	private TextView tvScore;
+	private TextView tvScoreValue;
+	private TextView tvScoreText;
 	private TextView tvLevel;
 	private TextView tvCoins;
+
+	private int screenHeight = 0; 
+	private int screenWidth  = 0;
+
+	boolean latestRowAnswered = false;
+	private ProgressDialog progressDialog;
+
+	private TranslateAnim animationFalling;
+	private boolean animPaused = false;
+
+
 
 	@Override 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 		mContext = this;
 
-		setContentView(R.layout.main_layout); 
-		layoutOuter = (LinearLayout)findViewById(R.id.layout_outer);
-		layout = (LinearLayout)findViewById(R.id.layout);	
+		level = 0;
+		score = 0;
+		coins = 0;
+
+		initUIcomponents();
+
 		doViewMeasurements(layoutOuter);
-		configureAnimation();
+
+		configureAnimation(); 
+
+		setupNextLevel();
+
+		// ***************  button actions
+
+		// 1. Pause
+		buttonPause.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				if (!animPaused){
+					animationFalling.pause();
+					handler.pause();
+					animPaused = true;
+				}
+				else{
+					animationFalling.resume();
+					handler.resume();
+					animPaused = false;
+				}
+
+			}
+		});
+
+		// 2. Down
+		buttonDown.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+
+				if (!animPaused){
+					animationFalling.restrictDuration(0);
+					handler.removeMessages(9);
+					handler.sendEmptyMessage(9);
+				}
+			}
+		});
+
+		//3. Hint
+		buttonHint.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+
+				LinearLayout row = (LinearLayout) layout.getChildAt(currRows - 1);
+				ArrayList<String> movieNames = new ArrayList<String>();
+
+				String movieName = row.getTag().toString();
+				movieNames.add(0, row.getTag().toString());
+				String jumb = "";
+				System.out.println("correct name = " +movieName);
+
+
+				for(int i = 0 ; i < row.getChildCount() ; i++){
+					FrameLayout frameLayout = (FrameLayout)row.getChildAt(i);
+
+
+					TextView textView = (TextView)frameLayout.getChildAt(0);
+					jumb += ((TextView)frameLayout.getChildAt(0)).getText().toString();
+					/*					char tvLetter = textView.getText().toString().charAt(0);
+
+					//TODO: blow out anim cud be used here
+					if (tvLetter == movieName.charAt(0))
+						textView.setBackgroundColor(getResources().getColor(R.color.blue_lighter) ) ;//colorBox);	
+					 */
+				}
+				movieNames.add(1, jumb) ;
+				System.out.println("jumble name = " +jumb);
+				
+				startActivity(new Intent(mContext, HintScreen.class)
+				.putExtra("movie_names", movieNames)
+				.putExtra( "starcast_names", starcastList.get(row.getId()) )
+				.putExtra("char_names", charList.get(row.getId()))
+//				.putExtra("coins", coins)
+				);
+
+
+			}//onClick END
+
+		});
+	} 
+
+
+	private void initUIcomponents(){
+		setContentView(R.layout.main_layout); 
+
+		layoutOuter = (RelativeLayout)findViewById(R.id.layout_outer);
+		layout = (LinearLayout)findViewById(R.id.layout);
+
+		tvScoreText = (TextView)findViewById(R.id.tv_score_text);
+		tvScoreValue = (TextView)findViewById(R.id.tv_score_points);
+		tvLevel = (TextView)findViewById(R.id.tv_level);
+		tvCoins = (TextView)findViewById(R.id.tv_coins);
+
+		buttonAskFriend = (Button)findViewById(R.id.button_ask_friend);
+		buttonHint = (Button)findViewById(R.id.button_hint);
+		buttonDown = (Button)findViewById(R.id.button_down);
+		buttonPause = (Button)findViewById(R.id.button_pause);
 
 		colorBox = getResources().getColor(R.color.blue_lighter);
-		colorText = getResources().getColor(R.color.solid_yellow);
+		colorText = getResources().getColor(R.color.white);
 		colorBoxSelected = getResources().getColor(R.color.solid_yellow);
 
 		Sound.initSound();
 
-		tvScore = (TextView)findViewById(R.id.tv_score_points);
-		tvLevel = (TextView)findViewById(R.id.tv_level);
-		tvCoins = (TextView)findViewById(R.id.tv_coins);
+		mFontStyle = Typeface.createFromAsset(mContext.getResources().getAssets(), "CooperHewitt-Semibold.otf");
 
-		level = 1;
-		score = 0;
-		coins = 0;
 
-		tvScore.setText("0");
+		tvScoreText.setTypeface(mFontStyle);
+		tvScoreValue.setTypeface(mFontStyle);
+		tvLevel.setTypeface(mFontStyle);
+		tvCoins.setTypeface(mFontStyle);
+
+		buttonAskFriend.setTypeface(mFontStyle);
+		buttonHint.setTypeface(mFontStyle);
+
+		tvScoreValue.setText("0");
+		tvScoreText.setText("Score:");
 		tvCoins.setText("0");
-		tvLevel.setText("Level 1");
 
-	} 
 
+	}
 	/////////////////////////////////////////////
 	//TODO: check how heavy is the initial layout, then decide whether to post this as runnable
 	private void addRow() {
@@ -130,21 +256,9 @@ public class GameScreen extends Activity implements AnimationListener{
 
 				System.out.println("start adding row");
 
-				//				System.out.println("ankur Movie name FETCHED  " + movieList.get(currentRows));
-
-
-				//Remove all the movies which exceed the width of the device
-				while (movieList.get(totalRowsAdded).length() > MAX_BLOCKS){
-
-					System.out.println("ankur Movie name RMEOVED !!" + movieList.remove(totalRowsAdded));
-					completeMovieList.get(0).remove(totalRowsAdded); //TODO: ERROR! remove such names from both lists
-				}
-
-
 				String curMovie = movieList.get(totalRowsAdded);
-				//				System.out.println("ankur Movie name ADDED **" + curMovie);
 
-				int totalCellsForThisRow = curMovie.length();
+				int totalCellsForThisRow = curMovie.length();//TODO: This will be always level value.. no need to calc here
 
 				LinearLayout row  = new LinearLayout(mContext); 
 				row.setLayoutParams(rowParams);
@@ -152,11 +266,14 @@ public class GameScreen extends Activity implements AnimationListener{
 				row.setAnimation(configureAnimation());
 				row.setTag( completeMovieList.get(0).get(totalRowsAdded));
 				System.out.println("Ankur jumbled = " + curMovie + " ,correct =" + completeMovieList.get(0).get(totalRowsAdded) );
-				row.setContentDescription(completeMovieList.get(2).get(totalRowsAdded));
 				row.setId(totalRowsAdded);
 
+
+				//				animationFalling.reset();
 				animationFalling.start();
-				Sound.playSound(SOUND_START_FALL);
+
+				int boxColor = Utils.getRandomColor();
+
 				for(int j = 0 ; j < totalCellsForThisRow; j++){
 					//create cells
 					FrameLayout cell = new FrameLayout(mContext);
@@ -166,22 +283,22 @@ public class GameScreen extends Activity implements AnimationListener{
 					//create textviews
 					TextView textView = new TextView(mContext); 
 					textView.setId(totalRowsAdded);
-					//					textView.setTypeface(mFontStyle);
+					//										textView.setTypeface(mFontStyle);
 					textView.setTypeface(null, Typeface.BOLD);
 					textView.setText( ( ""+curMovie.charAt(j) ).toUpperCase()); // Remove this when deciding casing as a level or hint.. TODO:
-					//					textView.setTextAppearance(mContext, android.R.style.TextAppearance_Large);
-					textView.setTextSize(getSizeInPixels(BLOCK_SIZE_SP - 22));//
-					textView.setTextColor(colorText);
+					//										textView.setTextAppearance(mContext, android.R.style.TextAppearance_Large);
+					textView.setTextSize((blockSize / 2));//
+					textView.setTextColor(colorText);  
 					textView.setBackgroundResource(R.drawable.textview_bg);
-
-					( (GradientDrawable) textView.getBackground() ).setColor(colorBox);
+					textView.setBackgroundColor(boxColor);
+					//					( (GradientDrawable) textView.getBackground() ).setColor(boxColor ) ;//colorBox);
 					textView.setGravity(Gravity.CENTER);
 					textView.setOnTouchListener(new ChoiceTouchListener());
 					textView.setOnDragListener(new ChoiceDragListener());
 
 
 					//add textviews to cells
-					cell.addView(textView);
+					cell.addView(textView); 
 
 					//add cells to rows
 					row.addView(cell);
@@ -194,12 +311,19 @@ public class GameScreen extends Activity implements AnimationListener{
 
 					@Override
 					public void onGlobalLayout() {
+
+
+						if (currRows != 0)
+							Sound.playSound(SOUND_START_FALL);
+
 						totalRowHeight += rowHeight;
 						totalRowsAdded++;
 						currRows++;
 						System.out.println("ROW ADDED !! totalRowHeight = " + totalRowHeight + " , currentRows = " +totalRowsAdded);
 						layout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-						handler.sendMessageDelayed(Message.obtain(handler, 9), startTime );
+						handler.sendMessageDelayed(Message.obtain(handler, 9), ANIM_DUR );
+
+						buttonHint.setEnabled(true);
 
 					}
 				});
@@ -207,7 +331,7 @@ public class GameScreen extends Activity implements AnimationListener{
 
 
 			}
-		});
+		}); 
 	}
 
 	private final class ChoiceTouchListener implements OnTouchListener {
@@ -218,13 +342,15 @@ public class GameScreen extends Activity implements AnimationListener{
 			if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
 
 				//setup drag
-				ClipData data = ClipData.newPlainText("AA", ((TextView)view).getText()); 
-				( (GradientDrawable) view.getBackground() ).setColor(colorBoxSelected);
+				ClipData data = ClipData.newPlainText("AA" , ((TextView)view).getText()); 
+				//				( (GradientDrawable) view.getBackground() ).setColor(colorBoxSelected);
+				view.setBackgroundColor(colorBoxSelected);
 				DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(view);
 
 				//start dragging the item touched
 				view.startDrag(data, shadowBuilder, view, 0);
 
+				colorBox = Utils.getRandomColor();
 				return true;
 			} 
 			else {
@@ -232,7 +358,6 @@ public class GameScreen extends Activity implements AnimationListener{
 			}
 		}
 	}
-
 
 	private class ChoiceDragListener implements OnDragListener {
 
@@ -253,7 +378,8 @@ public class GameScreen extends Activity implements AnimationListener{
 
 				//restrict movement in the same row
 				if (srcView.getId() == destView.getId()){
-					( (GradientDrawable) srcView.getBackground() ).setColor(colorBox);
+					//					( (GradientDrawable) srcView.getBackground() ).setColor(colorBox);
+					srcView.setBackgroundColor(colorBox);
 					//					System.out.println("start text = " + srcView.getText() + " , dest text = " + destView.getText());
 
 					String tempSrcText = event.getClipData().getItemAt(0).getText().toString();//srcView.getText().toString();
@@ -277,18 +403,21 @@ public class GameScreen extends Activity implements AnimationListener{
 
 				if (srcView.getId() == destView.getId()){
 					Sound.playSound(SOUND_SWIPE);
-					( (GradientDrawable) destView.getBackground() ).setColor(colorBoxSelected);
+					//					( (GradientDrawable) destView.getBackground() ).setColor(colorBoxSelected);
+					destView.setBackgroundColor(colorBoxSelected);
 				}
 				break;
 
 			case DragEvent.ACTION_DRAG_EXITED:        
 				if (srcView.getId() == destView.getId())
-					( (GradientDrawable) destView.getBackground() ).setColor(colorBox);
+					//					( (GradientDrawable) destView.getBackground() ).setColor(colorBox);
+					destView.setBackgroundColor(colorBox);
 				break;
 
 			case DragEvent.ACTION_DRAG_ENDED:
 				if (srcView.getId() == destView.getId())
-					( (GradientDrawable) destView.getBackground() ).setColor(colorBox);
+					//					( (GradientDrawable) destView.getBackground() ).setColor(colorBox);
+					destView.setBackgroundColor(colorBox);
 
 				break;
 
@@ -319,80 +448,91 @@ public class GameScreen extends Activity implements AnimationListener{
 
 			( (LinearLayout) (layout.getParent()) ).removeView(layout);
 			( (LinearLayout) (layout.getParent()) ).invalidate();
-			
+
 			totalRowHeight -= rowHeight;
 			currRows--;
-			
+
+			//if waiting for next row, then disable "Hint" button.. Enable it back in addRow
+			if (currRows == 0)
+				buttonHint.setEnabled(false);
+
 			System.out.println("Correct answer : totalRowHeight = " +totalRowHeight );
 			Sound.playSound(SOUND_ANS_CORRECT);
 
 
-			int localScore = Integer.parseInt(layout.getContentDescription().toString()) ;
+			updateScores() ;
 
-			if (localScore >= 1000){
-				score += 100; 
-				tvScore.setText(Integer.toString(score ));
-
-				coins += 10 ; 
-				tvCoins.setText(Integer.toString(coins) );
+			//Level Cleared ?
+			if ( (currRows == 0) && (totalRowsAdded == maxRowsAllowed) ){
+				handler.removeMessages(9);
+				setupNextLevel();
 			}
-			else if ( (localScore < 1000) && (localScore >= 500) ){
-				score += 200; 
-				tvScore.setText(Integer.toString(score ));
-
-				coins += 20 ; 
-				tvCoins.setText(Integer.toString(coins) );
-			}
-			else if ( (localScore < 500) && (localScore >= 200) ){
-				score += 300; 
-				tvScore.setText(Integer.toString(score ));
-
-				coins += 30 ; 
-				tvCoins.setText(Integer.toString(coins) );
-			}
-			else if ( (localScore < 200) && (localScore >= 100) ){
-				score += 400; 
-				tvScore.setText(Integer.toString(score ));
-
-				coins += 40 ; 
-				tvCoins.setText(Integer.toString(coins) );
-			}
-			else if ( (localScore < 100) && (localScore >= 50) ){
-				score += 500; 
-				tvScore.setText(Integer.toString(score ));
-
-				coins += 50 ; 
-				tvCoins.setText(Integer.toString(coins) );
-			}
-			else if ( (localScore < 50) && (localScore >= 20) ){
-				score += 1000; 
-				tvScore.setText(Integer.toString(score ));
-
-				coins += 100 ; 
-				tvCoins.setText(Integer.toString(coins) );
-			}
-			else if ( (localScore < 20)){
-				score += 2000; 
-				tvScore.setText(Integer.toString(score ));
-
-				coins += 200 ; 
-				tvCoins.setText(Integer.toString(coins) );
-			}
-			
-			if ( (currRows == 0) && (totalRowsAdded == 10) )
-				Toast.makeText(mContext, "Level Cleared" , Toast.LENGTH_LONG).show();
 
 		}else{
-
-			//			Sound.playSound(SOUND_ANS_WRONG);			
-			//			Animation shakeAnimation = AnimationUtils.loadAnimation(GameScreen.this, R.anim.shake);
-			//			layout.startAnimation(shakeAnimation);
+			//Wrong Answer
 		}
 	}
 
-	int screenHeight = 0;
-	int screenWidth  = 0;
-	private void doViewMeasurements(LinearLayout layout) {
+
+	private void setupNextLevel(){
+
+		AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+		alertDialog.setTitle("Start level "+ (++level) + " ?");
+
+		alertDialog.setButton(DialogInterface.BUTTON_POSITIVE,"OK", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+
+				MovieSearchTask task = new MovieSearchTask(GameScreen.this);
+				task.setLevel( level + 2);
+				task.execute();
+
+				progressDialog = ProgressDialog.show(mContext,
+						"Please wait...", "Movie Challenge Getting Ready...", true, true);
+
+				progressDialog.setOnCancelListener(new CancelTaskOnCancelListener(task));
+			}
+		});
+
+		alertDialog.show();
+	}
+
+
+	@Override
+	public void onReceiveResult(ArrayList<ArrayList<String>> list) {
+
+		if(list == null)
+			Toast.makeText(this, "Nwk Error", Toast.LENGTH_LONG).show();
+		else
+			GameApp.getAppInstance().setMovieSearchResult(list);
+
+		if(progressDialog != null) {
+			progressDialog.dismiss();
+			progressDialog = null;
+		}
+
+		maxRowsAllowed = 0;
+		totalRowsAdded = 0;
+
+		updateDimensions();
+		fetchMovieList();
+		addRow();
+
+		tvLevel.setText("Level " + level);
+
+
+	}
+
+	// TODO: use map for below
+	private void updateScores(){
+
+		score += level * 100; 
+		tvScoreValue.setText(Integer.toString(score ));
+
+		coins += 10 ; 
+		tvCoins.setText(Integer.toString(coins) );
+	}
+
+	private void doViewMeasurements(RelativeLayout layout) {
 		layout.post(new Runnable() { 
 
 			public void run() {  
@@ -414,85 +554,72 @@ public class GameScreen extends Activity implements AnimationListener{
 				getWindowManager().getDefaultDisplay().getMetrics(metrics);   
 				screenHeight = metrics.heightPixels;
 				screenWidth = metrics.widthPixels;
-				System.out.println("ankur:  Actual Screen Height = " + screenHeight + " Width = " + screenWidth);   
 
 				// Now calculate the height that our layout can be set
 				// If you know that your application doesn't have statusBar added, then don't add here also. Same applies to application bar also 
-				layoutHeight = screenHeight - (titleBarHeight + statusBarHeight + getSizeInPixels(ACTIONBAR_SIZE_SP));
+				layoutHeight = screenHeight - (titleBarHeight + statusBarHeight + Utils.getSizeInPixels(ACTIONBAR_SIZE_SP) 
+						+ Utils.getSizeInPixels(BOTTOM_LAYOUT_SIZE_SP));
 				System.out.println("ankur: Layout Height = " + layoutHeight);   		
 
-				MAX_BLOCKS = screenWidth / (getSizeInPixels(BLOCK_SIZE_SP) + ( 2 * getSizeInPixels(GENERIC_MARGIN_SP) ) );
-
-				System.out.println("ankur MAX_BLOCKS = " +MAX_BLOCKS);
-
-				rowWidth = (getSizeInPixels(BLOCK_SIZE_SP) * MAX_BLOCKS) + ( (MAX_BLOCKS * 2) * getSizeInPixels(GENERIC_MARGIN_SP) );
-				rowHeight =  ( getSizeInPixels(BLOCK_SIZE_SP) + ( 2 * getSizeInPixels(GENERIC_MARGIN_SP)) ); 
-
-				colWidth = getSizeInPixels(BLOCK_SIZE_SP);
-				colHeight = getSizeInPixels(BLOCK_SIZE_SP); 
-
-				margin = getSizeInPixels(GENERIC_MARGIN_SP);
-
-				rowParams = new LinearLayout.LayoutParams( rowWidth, rowHeight); 
-				cellParams = new LinearLayout.LayoutParams( colWidth, colHeight); 
-				cellParams.setMargins( margin, margin, margin, margin);
-
-				//				mFontStyle = Typeface.createFromAsset(mContext.getResources().getAssets(), /*"BEBAS___.ttf" */"ClearSans-Bold.ttf");
-
-				System.out.println("copy list");
-				completeMovieList = GameApp.getAppInstance().getMovieNames();
-				movieList = GameApp.getAppInstance().getMovieNames().get(1);
-				System.out.println("Total no of movies available = " +movieList.size());
-
-
-				//Trigger row addition
-				addRow();
-
+				//				updateDimensions();
 			}
 		});
 	}
 
-	private int getSizeInPixels(int dp){
-		return (int) ( (dp * getResources().getDisplayMetrics().density)  + 0.5f) ; 
+	private void updateDimensions(){
+
+		maxBoxesForThisLevel = level + 2;
+
+		blockSize = Utils.getSizeInDp((screenWidth -  (maxBoxesForThisLevel * 2) * Utils.getSizeInPixels(GENERIC_MARGIN_SP) ) / maxBoxesForThisLevel );
+		//		rowWidth = (getSizeInPixels(blockSize) * maxBoxesForThisLevel) + ( (maxBoxesForThisLevel * 2) * getSizeInPixels(GENERIC_MARGIN_SP) );
+
+
+		rowWidth = screenWidth ;
+		rowHeight =  ( Utils.getSizeInPixels(blockSize) + ( 2 * Utils.getSizeInPixels(GENERIC_MARGIN_SP)) ); 
+		System.out.println("ankur:  Actual Screen Height = " + screenHeight + " Width = " + screenWidth);   
+		System.out.println("ankur:  Actual rowHeight = " + rowHeight + " rowwidth = " + rowWidth); 
+		System.out.println("ankur block size = " +blockSize);
+
+		colWidth = Utils.getSizeInPixels(blockSize);
+		colHeight = Utils.getSizeInPixels(blockSize); 
+
+		margin = Utils.getSizeInPixels(GENERIC_MARGIN_SP);
+
+		rowParams = new LinearLayout.LayoutParams( rowWidth, rowHeight); 
+		cellParams = new LinearLayout.LayoutParams( colWidth, colHeight); 
+		cellParams.setMargins( margin, margin, margin, margin);
+
+	}
+
+	private void fetchMovieList(){
+
+		//TODO: move this part out into a separate func which can be used on clearing every level
+		System.out.println("copy list");
+		completeMovieList = GameApp.getAppInstance().getMovieNames();
+		movieList = GameApp.getAppInstance().getMovieNames().get(1);
+		starcastList = GameApp.getAppInstance().getMovieNames().get(2);
+		charList = GameApp.getAppInstance().getMovieNames().get(3);
+		maxRowsAllowed = movieList.size();
+		System.out.println("Total no of movies available = " +movieList.size());
 	}
 
 
-	private TranslateAnim animationFalling; 
+
+
 	private TranslateAnimation configureAnimation() {
 		animationFalling = new TranslateAnim(Animation.RELATIVE_TO_PARENT, 0.0f,
 				Animation.RELATIVE_TO_PARENT, 0.0f,
 				Animation.RELATIVE_TO_PARENT, -1.0f,
 				Animation.RELATIVE_TO_PARENT, 0.0f);
 
-		//		animationFalling.setAnimationListener(this);
-		animationFalling.setDuration(startTime);
+		animationFalling.setDuration(ANIM_DUR);
 		animationFalling.setFillAfter(true);
 		//		animationFalling.start();
 
 		return animationFalling;
 	}
 
-	@Override
-	public void onAnimationEnd(Animation animation) {
 
-
-
-		System.out.println(" onAnimationEnd start");
-
-		if (layoutHeight < (totalRowHeight + rowHeight) && ( totalRowsAdded < movieList.size() )) {
-
-			Sound.playSound(SOUND_GAME_OVER);
-			System.out.println("MAX boxes added !!");
-			Toast.makeText(this, "MAX boxes added !!", Toast.LENGTH_LONG).show();
-			startActivity(new Intent(this, GameOverScreen.class));
-			finish();
-
-		}else{
-
-			System.out.println("Add new row now");
-			addRow();
-		}
-	}
 
 	/**
 	 * Handler for this activity
@@ -504,6 +631,10 @@ public class GameScreen extends Activity implements AnimationListener{
 		super.onDestroy();
 		handler.setActivity(null);
 		Sound.unloadSound();
+
+		maxRowsAllowed = 0;
+		totalRowsAdded = 0;
+		currRows = 0;
 		//		tvList.clear();
 		//		selectedBoxId = -1;
 	}
@@ -513,25 +644,22 @@ public class GameScreen extends Activity implements AnimationListener{
 	protected void onResume() {
 		super.onResume();
 		handler.setActivity(this);
-		handler.resume();
-		animationFalling.resume();
+		if (animPaused){
+			animationFalling.resume();
+			handler.resume();
+			animPaused = false;
+		}
 	}
 
 	@Override
 	protected void onPause() {
-		// TODO Auto-generated method stub
 		super.onPause();
-		handler.pause();
-		animationFalling.pause();
-	}
 
-	@Override
-	public void onAnimationRepeat(Animation animation) {
-	}
-
-	@Override
-	public void onAnimationStart(Animation animation) {
-		System.out.println("onAnimationStart");
+		if (!animPaused){
+			animationFalling.pause();
+			handler.pause();
+			animPaused = true;
+		}
 	}
 
 
@@ -589,10 +717,36 @@ public class GameScreen extends Activity implements AnimationListener{
 
 			System.out.println("Add new row now");
 
-			if (totalRowsAdded <10)
+			if (totalRowsAdded < maxRowsAllowed)
 				addRow();
 		}
 
+	}
+
+
+@Override
+protected void onStart() {
+	// TODO Auto-generated method stub
+	super.onStart();
+	tvCoins.setText(Integer.toString(coins) );
+}
+
+	private class CancelTaskOnCancelListener implements DialogInterface.OnCancelListener{
+
+		private AsyncTask<?,?,?> task;
+
+		private CancelTaskOnCancelListener(AsyncTask<?,?,?> task){
+			this.task = task;
+		}
+
+		@Override 
+		public void onCancel(DialogInterface dialogInterface) {
+			if(task != null){
+				task.cancel(true);
+			}
+			startActivity(new Intent(GameScreen.this, GameOverScreen.class)); //TODO:
+			finish();
+		}
 	}
 
 }

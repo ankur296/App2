@@ -30,10 +30,20 @@
         
         <activity android:name="corp.seedling.movie.guess.ui.GameScreen" >
         </activity>
+        
+        
         <activity
             android:name="corp.seedling.movie.guess.ui.GameOverScreen"
-            android:theme="@style/Theme.Translucent" >
+             >
         </activity>
+        
+         
+         <activity
+            android:name="corp.seedling.movie.guess.ui.HintScreen"
+             >
+        </activity>
+        
+         
         <activity
             android:name="corp.seedling.movie.guess.ui.StartingScreen"
             android:label="@string/app_name" >

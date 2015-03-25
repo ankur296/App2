@@ -2,6 +2,8 @@ package corp.seedling.movie.guess.utils;
 
 import java.util.Vector;
 
+import corp.seedling.movie.guess.ui.GameScreen;
+
 import android.os.Handler;
 import android.os.Message;
 
@@ -20,7 +22,7 @@ public abstract class PauseHandler extends Handler {
 			if (i == 1)
 				sendMessage(msg );
 			else
-				sendMessageDelayed(msg , 5000 * i++);
+				sendMessageDelayed(msg , GameScreen.ANIM_DUR * i++);
 		}
 	}
 
