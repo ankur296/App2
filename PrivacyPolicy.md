@@ -8,36 +8,15 @@ Important things to know about your data :
 All the data accessed is stored locally on the device. Data is accessed by the application for the desired features to function properly. We don’t transmit or store personal information on our servers.
 
 
-Guess-The-Hollywood-Movie-Quiz Permissions:
-
-
 Important permission are mentioned below which are used in our applications
+Seven Letters:
+Needs network related permission to show Leaderboard and Achievements, Uses PlayGame Services which helps us to keep track of scores and achievements by players. For more clarification please refer to Google PlayGame policies.
 
-SMS read/Receive permission: To keep track of incoming Sms for announcements.
-Phone State Permission: To keep track of incoming and Outgoing Calls for announcements of the Calls.
-Contact read/ permission: To check if the contact is already saved in your contact and use name for the announcement.
-Internet Permission: To show the ads and analytics which helps us to provide you better products.
-Draw Overlay over Other Applications: If allowed helps the user to mute announcements on Caller screen.
-Accessibility Service Permission: If allowed announces the notification from the application .
-Applications installed on your device are tracked for only purpose if in future user may be interested in announcing the notifications sent by application. We don not share application inventory information to any server as all the data accessed is local to the device. It helps the App Announcer feature to work properly.
+Guess-The-Hollywood-Movie-Quiz:
 
- 
 
-Save Contact Permissions
-Important permission are mentioned below which are used in our applications
 
-Phone State Permission-> To check if there is an incoming call state so that application will be activated.
-CallLog read permission-> To read the call log and check for how much time Call was made.
-Contact read permission-> To check if the contact is already saved in your contact list so that we can use the information to decide the save prompt accordingly.
-Internet Permission -> To show the ads which helps us to provide better products.
- 
 
-2048 Permissions
-Important permission are mentioned below which are used in our applications
-
-Storage read/Write permission: Helps to save/store the screenshots of the score.
-Internet Permission: To show the ads and analytics which helps us to provide you better products.
-2048 is a game and makes use of PlayGame Services which helps us to keep track of scores and achievements by players. For more clarification please refer to Google PlayGame policies.
 
  
 
@@ -54,4 +33,4 @@ Users can set preferences for how Google advertises to you using the Google Ad S
 All the policy changes will be updated here.
  
 
-For any questions or information on privacy policy please contact us on the address mentioned support@androidardent.com
+For any questions or information on privacy policy please contact us on corpseedling@gmail.com
