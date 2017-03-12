@@ -30,6 +30,10 @@ Seven Letters:
 Needs network related permission to show Leaderboard and Achievements, Uses PlayGame Services which helps us to keep track of scores and achievements by players. For more clarification please refer to Google PlayGame policies.
 
 
+News Wordy:
+
+Needs account and sync permissions to fetch the meaning of words and the news in which they are used.
+Needs network related permission to show ads
 
 
 
