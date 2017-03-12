@@ -11,6 +11,12 @@ All the data accessed is stored locally on the device. Data is accessed by the a
 Important permission are mentioned below which are used in our applications
 
 
+2048 Cute Cats:
+Storage read/Write permission: Helps to save/store the screenshots of the score.
+Internet Permission: To show the ads and analytics which helps us to provide you better products.
+2048 is a game and makes use of PlayGame Services which helps us to keep track of scores and achievements by players. For more clarification please refer to Google PlayGame policies.
+
+
 
 Time n Location Reminder:
 
