@@ -9,8 +9,23 @@ All the data accessed is stored locally on the device. Data is accessed by the a
 
 
 Important permission are mentioned below which are used in our applications
+
+Time n Location Reminder:
+Needs Location related permission to alert you when you arrive at the location for which you set the reminder.
+Need vibration permission for alarm settings.
+Needs draw over other apps to enable you to give permission on the run.
+Needs modify system settings permission for ringtone selection.
+Need gallery and storage permission to enabe you to set a custom pic for the reminder other than the default ones.
+Needs run at startup permission to set all the location geofences again as they are all lost on device reboot.
+Needs permission to prevent device from going to sleep for alarms to work.
+Needs network related permission to show ads (currently disabled).
+
 Seven Letters:
 Needs network related permission to show Leaderboard and Achievements, Uses PlayGame Services which helps us to keep track of scores and achievements by players. For more clarification please refer to Google PlayGame policies.
+
+
+
+
 
 Guess-The-Hollywood-Movie-Quiz:
 
